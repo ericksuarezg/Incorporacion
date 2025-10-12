@@ -1,7 +1,9 @@
 const http = require('http');
 const express = require('express');
 const mime = require('mime-types');
-//const { securityAdministrator } = require('../../securityServer/securityAdministrator');
+const { connectMongo, mongoose } = require('../../server/conection/mongo');
+const authRoutes = require('../../auth/authRoutes');
+const { securityAdministrator } = require('../../securityServer/securityAdministrator');
 //const {PathSetUp}= require('../controler/pathSetUp')
 
 class WebServer {
@@ -10,7 +12,9 @@ class WebServer {
         this.app = express();
         this.server = http.createServer(this.app);
         this.publicPath = require('path').resolve(__dirname, '../../public');
-       // this.pathSetUp= new PathSetUp(); 
+        // this.pathSetUp= new PathSetUp(); 
+
+        this.app.use(express.json());
 
         this.app.use(express.static(this.publicPath, {
             setHeaders: (res, filePath) => {
@@ -20,7 +24,17 @@ class WebServer {
                 }
             }
         }));
-        
+
+        // Endpoint de salud para comprobar la conexión a MongoDB
+        this.app.get('/api/health/db', (req, res) => {
+            const states = ['disconnected', 'connected', 'connecting', 'disconnecting'];
+            res.json({
+                readyState: mongoose.connection.readyState,
+                state: states[mongoose.connection.readyState]
+            });
+        });
+
+        this.app.use('/api/auth', authRoutes);
     }
 
     /* _userAuthentication() {
@@ -34,7 +48,10 @@ class WebServer {
         
     } */
 
-    start() {
+    async start() {
+        securityAdministrator.userAuthentication(this.app);
+        await connectMongo();
+
         /* this._userAuthentication();
         this._tokenAuthentication();
         this._setupRoutes(this.app,express,this.publicPath,securityAdministrator); */
@@ -45,4 +62,4 @@ class WebServer {
 
 }
 
-module.exports = WebServer; 
+module.exports = WebServer;

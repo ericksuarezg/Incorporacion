@@ -1,39 +1,45 @@
-const jwt= require('jsonwebtoken');
+const jwt = require('jsonwebtoken');
 class SecurityAdministrator {
 
-    constructor() {
+  constructor() {
 
-    } 
+  }
 
-    userAuthentication(app) {
-        console.log('autenticando el usuario')
-        app.use(async (req, res, next) => {
-            console.log(`Tipo de peticion: ${req.method}`)
-            console.log(`URL solicitada: ${req.url}`)
-            next()
-        })
+  userAuthentication(app) {
+    console.log('autenticando el usuario')
+    app.use(async (req, res, next) => {
+      console.log(`Tipo de peticion: ${req.method}`)
+      console.log(`URL solicitada: ${req.url}`)
+      next()
+    })
+  }
+
+
+  tokenAutehntication = (req, res, next) => {
+    const authHeader = req.headers.authorization || '';
+    const token = authHeader.startsWith('Bearer ') ? authHeader.substring(7) : authHeader;
+
+    if (!token) {
+      return res.status(401).json({ message: 'Token no proporcionado' });
     }
-    
 
-    tokenAutehntication=(req, res, next)=> { 
-        const token = req.headers.authorization;
-      
-        if (!token) {
-          return res.status(401).json({ message: 'Token no proporcionado' });
-        }
-      
-        jwt.verify(token.split(' ')[1], 'secretKey', (err, decodedToken) => {
-          if (err) {
-            return res.status(401).json({ message: 'Token inválido' });
-          }
-          req.userId = decodedToken.userId;
-          next();
-        });
+    const secret = process.env.JWT_SECRET;
+    if (!secret) {
+      return res.status(500).json({ message: 'Servidor sin JWT_SECRET configurado' });
+    }
+
+    jwt.verify(token, secret, (err, decodedToken) => {
+      if (err) {
+        return res.status(401).json({ message: 'Token inválido' });
       }
-    
-   
-    
+      req.userId = decodedToken.userId;
+      next();
+    });
+  }
+
+
+
 }
 
-let securityAdministrator= new SecurityAdministrator();
+let securityAdministrator = new SecurityAdministrator();
 module.exports = { securityAdministrator }
