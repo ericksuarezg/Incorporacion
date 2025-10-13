@@ -1,8 +1,10 @@
 // Archivo: authRoutes.js
 const express = require('express');
 const jwt = require('jsonwebtoken');
-const bcrypt = require('bcryptjs');
 const User = require('../server/models/user/user');
+const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
+const Permiso = require('../server/models/permiso/permiso');
 
 const router = express.Router();
 
@@ -20,7 +22,8 @@ router.post('/login', async (req, res) => {
 
         const user = await User.findOne({
             $or: [{ Cr_Nombre_Usuario: emailPlain }, { email: emailPlain }]
-        });
+        }).populate('Cr_Pe_Codigo'); // aquí se incluye cl_permisos
+
         if (!user) {
             return res.status(401).json({ error: 1, response: { mensaje: 'Credenciales inválidas' } });
         }
@@ -50,8 +53,19 @@ router.post('/login', async (req, res) => {
             { expiresIn: process.env.JWT_EXPIRES_IN || '12h' }
         );
 
-        console.log('Login OK para usuario:', user._id);
-        return res.status(200).json({ error: 0, response: { mensaje: 'Login exitoso', token } });
+        const perfil = user.Cr_Perfil ?? null;
+        const empresa = user.Cr_Empresa ?? null;
+        const permisos = user.Cr_Pe_Codigo || null;
+        const nombre = permisos?.Pe_Nombre || null;
+        const apellido = permisos?.Pe_Apellido || null;
+        const correo = permisos?.Pe_Correo || null;
+        const cel = permisos?.Pe_Cel || null;
+        const permiso = permisos?.Pe_Permiso || null;
+
+        return res.status(200).json({
+            error: 0,
+            response: { mensaje: 'Login exitoso', token, perfil, empresa, nombre, apellido, correo, cel, permiso }
+        });
     } catch (err) {
         console.error('Error en /login:', err);
         return res.status(500).json({ error: 1, response: { mensaje: 'Error interno del servidor' } });
