@@ -1,6 +1,7 @@
 const http = require('http');
 const express = require('express');
 const mime = require('mime-types');
+const cors = require('cors');
 const { connectMongo, mongoose } = require('../../server/conection/mongo');
 const authRoutes = require('../../auth/authRoutes');
 const { securityAdministrator } = require('../../securityServer/securityAdministrator');
@@ -12,7 +13,17 @@ class WebServer {
         this.app = express();
         this.server = http.createServer(this.app);
         this.publicPath = require('path').resolve(__dirname, '../../public');
-        // this.pathSetUp= new PathSetUp(); 
+        // this.pathSetUp= new PathSetUp();
+
+        this.app.use((req, res, next) => {
+            res.header('Access-Control-Allow-Origin', 'http://localhost:4200');
+            res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+            res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+            if (req.method === 'OPTIONS') {
+                return res.sendStatus(204);
+            }
+            next();
+        });
 
         this.app.use(express.json());
 
