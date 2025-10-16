@@ -1,9 +1,7 @@
-// Archivo: authRoutes.js
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const User = require('../server/models/user/user');
 const bcrypt = require('bcryptjs');
-const crypto = require('crypto');
 const Permiso = require('../server/models/permiso/permiso');
 
 const router = express.Router();
@@ -22,7 +20,7 @@ router.post('/login', async (req, res) => {
 
         const user = await User.findOne({
             $or: [{ Cr_Nombre_Usuario: emailPlain }, { email: emailPlain }]
-        }).populate('Cr_Pe_Codigo'); // aquí se incluye cl_permisos
+        }).populate('Cr_Pe_Codigo');
 
         if (!user) {
             return res.status(401).json({ error: 1, response: { mensaje: 'Credenciales inválidas' } });

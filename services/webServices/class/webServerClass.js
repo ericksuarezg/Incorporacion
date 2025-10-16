@@ -5,7 +5,8 @@ const cors = require('cors');
 const { connectMongo, mongoose } = require('../../server/conection/mongo');
 const authRoutes = require('../../auth/authRoutes');
 const { securityAdministrator } = require('../../securityServer/securityAdministrator');
-//const {PathSetUp}= require('../controler/pathSetUp')
+const userRoutes = require('../../user/userRoutes');
+const hojaVidaRoutes = require('../../hojaVida/hojaVidaRoutes');
 
 class WebServer {
     constructor(port) {
@@ -46,6 +47,8 @@ class WebServer {
         });
 
         this.app.use('/api/auth', authRoutes);
+        this.app.use('/api/users', userRoutes);
+        this.app.use('/api/hojas-vida', hojaVidaRoutes); // <-- nueva ruta para hojas de vida
     }
 
     /* _userAuthentication() {
@@ -60,6 +63,7 @@ class WebServer {
     } */
 
     async start() {
+        console.log('[webserver] MONGODB_URI:', process.env.MONGODB_URI);
         securityAdministrator.userAuthentication(this.app);
         await connectMongo();
 
