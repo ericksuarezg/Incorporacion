@@ -16,15 +16,16 @@ class WebServer {
         this.publicPath = require('path').resolve(__dirname, '../../public');
         // this.pathSetUp= new PathSetUp();
 
-        this.app.use((req, res, next) => {
-            res.header('Access-Control-Allow-Origin', 'http://localhost:4200');
-            res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-            res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-            if (req.method === 'OPTIONS') {
-                return res.sendStatus(204);
-            }
-            next();
-        });
+        // Configuración de CORS
+        const corsOptions = {
+            origin: ['http://localhost:4200', 'http://52.15.143.100:4200'],
+            credentials: true,
+            methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+            allowedHeaders: ['Content-Type', 'Authorization'],
+            optionsSuccessStatus: 200
+        };
+        
+        this.app.use(cors(corsOptions));
 
         this.app.use(express.json());
 
@@ -48,7 +49,7 @@ class WebServer {
 
         this.app.use('/api/auth', authRoutes);
         this.app.use('/api/users', userRoutes);
-        this.app.use('/api/hojas-vida', hojaVidaRoutes); // <-- nueva ruta para hojas de vida
+        this.app.use('/api/hojas-vida', hojaVidaRoutes);
     }
 
     /* _userAuthentication() {
