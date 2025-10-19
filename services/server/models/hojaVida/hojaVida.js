@@ -29,7 +29,9 @@ const hojaVidaSchema = new mongoose.Schema(
         GRUP_MINO: { type: String },
         ESTRATO: { type: String },
         TIPO_MEDIO: { type: String },
-        COLEGIO: { type: String }
+        COLEGIO: { type: String },
+        IPS_ID: { type: mongoose.Schema.Types.ObjectId, ref: 'cl_ips' },
+        PDF_URL: { type: String }
     },
     { timestamps: true, collection: 'cl_hoja_vida' }
 );

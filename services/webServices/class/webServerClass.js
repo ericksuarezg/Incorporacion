@@ -7,6 +7,8 @@ const authRoutes = require('../../auth/authRoutes');
 const { securityAdministrator } = require('../../securityServer/securityAdministrator');
 const userRoutes = require('../../user/userRoutes');
 const hojaVidaRoutes = require('../../hojaVida/hojaVidaRoutes');
+const pdf = require('../../pdf/pdf');
+const ipsRoutes = require('../../ipsRoutes/ipsRoutes');
 
 class WebServer {
     constructor(port) {
@@ -50,6 +52,8 @@ class WebServer {
         this.app.use('/api/auth', authRoutes);
         this.app.use('/api/users', userRoutes);
         this.app.use('/api/hojas-vida', hojaVidaRoutes);
+        this.app.use('/api/ips', ipsRoutes);
+        this.app.use('/api/pdf', pdf);
     }
 
     /* _userAuthentication() {
