@@ -24,31 +24,96 @@ router.post('/crearIps', async (req, res) => {
 
         const data = req.body;
 
-        if (!data.NOMBRE_IPS || data.NOMBRE_IPS.trim() === '') {
-            return res.status(400).json({ error: 1, response: { mensaje: 'Se debe enviar el nombre de la IPS' } });
+        // Validar que se envíen datos
+        if (!data || Object.keys(data).length === 0) {
+            return res.status(400).json({ 
+                error: 1, 
+                response: { mensaje: 'No se enviaron datos en el cuerpo de la petición' } 
+            });
+        }
+
+        // Validar campos obligatorios
+        const camposObligatorios = [
+            { campo: 'NOMBRE_IPS', nombre: 'Nombre de la IPS' },
+            { campo: 'NIT', nombre: 'NIT' },
+            { campo: 'DIRECCION', nombre: 'Dirección' },
+            { campo: 'TELEFONO', nombre: 'Teléfono' },
+            { campo: 'CORREO', nombre: 'Correo electrónico' },
+            { campo: 'REPRESENTANTE', nombre: 'Representante legal' },
+            { campo: 'CIUDAD', nombre: 'Ciudad' },
+            { campo: 'DEPARTAMENTO', nombre: 'Departamento' },
+            { campo: 'REGIONAL', nombre: 'Regional' }
+        ];
+
+        const camposFaltantes = [];
+        for (const { campo, nombre } of camposObligatorios) {
+            if (!data[campo] || (typeof data[campo] === 'string' && data[campo].trim() === '')) {
+                camposFaltantes.push(nombre);
+            }
+        }
+
+        if (camposFaltantes.length > 0) {
+            return res.status(400).json({
+                error: 1,
+                response: { 
+                    mensaje: `Los siguientes campos son obligatorios: ${camposFaltantes.join(', ')}` 
+                }
+            });
+        }
+
+        // Validar formato de correo electrónico
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(data.CORREO.trim())) {
+            return res.status(400).json({
+                error: 1,
+                response: { mensaje: 'El formato del correo electrónico no es válido' }
+            });
         }
 
         
-        const existente = await IPS.findOne({ NOMBRE_IPS: data.NOMBRE_IPS.trim() }).lean();
-        if (existente) {
+        // Validar duplicado por NOMBRE_IPS
+        const existentePorNombre = await IPS.findOne({ NOMBRE_IPS: data.NOMBRE_IPS.trim() }).lean();
+        if (existentePorNombre) {
             return res.status(409).json({
                 error: 1,
                 response: { mensaje: `La IPS '${data.NOMBRE_IPS}' ya está registrada` }
             });
         }
 
+        // Validar duplicado por NIT (si se proporciona)
+        if (data.NIT && data.NIT.trim() !== '') {
+            const existentePorNIT = await IPS.findOne({ NIT: data.NIT.trim() }).lean();
+            if (existentePorNIT) {
+                return res.status(409).json({
+                    error: 1,
+                    response: { mensaje: `Ya existe una IPS registrada con el NIT '${data.NIT}'` }
+                });
+            }
+        }
+
+        // Validar duplicado por CORREO (si se proporciona)
+        if (data.CORREO && data.CORREO.trim() !== '') {
+            const existentePorCorreo = await IPS.findOne({ CORREO: data.CORREO.trim() }).lean();
+            if (existentePorCorreo) {
+                return res.status(409).json({
+                    error: 1,
+                    response: { mensaje: `Ya existe una IPS registrada con el correo '${data.CORREO}'` }
+                });
+            }
+        }
+
         
         const nuevaIPS = await IPS.create({
             NOMBRE_IPS: data.NOMBRE_IPS.trim(),
-            NIT: data.NIT || '',
-            DIRECCION: data.DIRECCION || '',
-            TELEFONO: data.TELEFONO || '',
-            CORREO: data.CORREO || '',
-            REPRESENTANTE: data.REPRESENTANTE || '',
-            CIUDAD: data.CIUDAD || '',
-            DEPARTAMENTO: data.DEPARTAMENTO || '',
-            REGIONAL: data.REGIONAL || '',
-            ESTADO: data.ESTADO || 'ACTIVA',
+            NIT: data.NIT.trim(),
+            DIRECCION: data.DIRECCION.trim(),
+            TELEFONO: data.TELEFONO.trim(),
+            CORREO: data.CORREO.trim(),
+            REPRESENTANTE: data.REPRESENTANTE.trim(),
+            CIUDAD: data.CIUDAD.trim(),
+            DEPARTAMENTO: data.DEPARTAMENTO.trim(),
+            REGIONAL: data.REGIONAL.trim(),
+            ESTADO: data.ESTADO ? data.ESTADO.trim() : 'ACTIVA',
             COMPLEMENTARIA_1: data.COMPLEMENTARIA_1 || {},
             COMPLEMENTARIA_2: data.COMPLEMENTARIA_2 || {},
             FECHA_REGISTRO: new Date().toISOString()
@@ -57,21 +122,7 @@ router.post('/crearIps', async (req, res) => {
         return res.status(201).json({
             error: 0,
             response: {
-                mensaje: 'IPS creada exitosamente',
-                ips: {
-                    _id: nuevaIPS._id,
-                    NOMBRE_IPS: nuevaIPS.NOMBRE_IPS,
-                    NIT: nuevaIPS.NIT,
-                    DIRECCION: nuevaIPS.DIRECCION,
-                    TELEFONO: nuevaIPS.TELEFONO,
-                    CORREO: nuevaIPS.CORREO,
-                    REPRESENTANTE: nuevaIPS.REPRESENTANTE,
-                    CIUDAD: nuevaIPS.CIUDAD,
-                    DEPARTAMENTO: nuevaIPS.DEPARTAMENTO,
-                    REGIONAL: nuevaIPS.REGIONAL,
-                    ESTADO: nuevaIPS.ESTADO,
-                    FECHA_REGISTRO: nuevaIPS.FECHA_REGISTRO
-                }
+                mensaje: 'IPS creada exitosamente'
             }
         });
 
