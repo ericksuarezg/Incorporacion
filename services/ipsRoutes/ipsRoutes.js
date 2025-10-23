@@ -176,4 +176,44 @@ router.post('/actualizar', async (req, res) => {
         return res.status(500).json({ error: 1, response: { mensaje: 'Error interno del servidor' } });
     }
 });
+
+// Endpoint para consultar todas las IPS
+router.get('/consultar', async (req, res) => {
+    try {
+        // Validar token
+        const authHeader = req.headers['authorization'] || req.headers.authorization;
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+            return res.status(401).json({ error: 1, response: { mensaje: 'Token requerido' } });
+        }
+
+        const token = authHeader.substring(7);
+        const secret = process.env.JWT_SECRET;
+        if (!secret) {
+            return res.status(500).json({ error: 1, response: { mensaje: 'Servidor sin JWT_SECRET configurado' } });
+        }
+
+        try {
+            jwt.verify(token, secret);
+        } catch (e) {
+            return res.status(401).json({ error: 1, response: { mensaje: 'Token inválido o expirado' } });
+        }
+
+        // Consultar todas las IPS
+        const ips = await IPS.find({}).sort({ FECHA_REGISTRO: -1 }).lean();
+
+        return res.status(200).json({
+            error: 0,
+            response: {
+                mensaje: `Se encontraron ${ips.length} IPS registradas`,
+                total: ips.length,
+                ips: ips
+            }
+        });
+
+    } catch (err) {
+        console.error('Error en /api/ips/consultar:', err);
+        return res.status(500).json({ error: 1, response: { mensaje: 'Error interno del servidor' } });
+    }
+});
+
 module.exports = router;

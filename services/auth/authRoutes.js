@@ -20,7 +20,7 @@ router.post('/login', async (req, res) => {
 
         const user = await User.findOne({
             $or: [{ Cr_Nombre_Usuario: emailPlain }, { email: emailPlain }]
-        }).populate('Cr_Pe_Codigo');
+        }).populate('Cr_Pe_Codigo').populate('Cr_Ips');
 
         if (!user) {
             return res.status(401).json({ error: 1, response: { mensaje: 'Credenciales inválidas' } });
@@ -53,6 +53,7 @@ router.post('/login', async (req, res) => {
 
         const perfil = user.Cr_Perfil ?? null;
         const empresa = user.Cr_Empresa ?? null;
+        const ipsId = user.Cr_Ips ? (user.Cr_Ips._id || user.Cr_Ips) : null;
         const permisos = user.Cr_Pe_Codigo || null;
         const nombre = permisos?.Pe_Nombre || null;
         const apellido = permisos?.Pe_Apellido || null;
@@ -62,7 +63,19 @@ router.post('/login', async (req, res) => {
 
         return res.status(200).json({
             error: 0,
-            response: { mensaje: 'Login exitoso', token, perfil, empresa, nombre, apellido, correo, cel, permiso }
+            response: {
+                mensaje: 'Login exitoso',
+                id: user._id,
+                ips_id: ipsId,
+                token,
+                perfil,
+                empresa,
+                nombre,
+                apellido,
+                correo,
+                cel,
+                permiso
+            }
         });
     } catch (err) {
         console.error('Error en /login:', err);

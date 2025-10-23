@@ -102,7 +102,7 @@ router.post('/register', async (req, res) => {
             Cr_Nombre_Usuario: credenciales.Cr_Nombre_Usuario,
             Cr_Password: passwordHash,
             Cr_Perfil: credenciales.Cr_Perfil,
-            Cr_Empresa: credenciales.Cr_Empresa,
+            Cr_Ips: credenciales.Cr_Ips, // Cambio de Cr_Empresa a Cr_Ips
             Cr_Estado: 'Activo',
             Cr_Pe_Codigo: permisoDoc._id
         });
